@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+venv/
+
+# 环境配置
+.env
+.env.local
+
+# 数据文件
+data/*.db
+data/agent_memory/
+
+# 日志
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 测试
+htmlcov/
+.coverage
+coverage.xml

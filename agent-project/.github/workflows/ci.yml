@@ -1,0 +1,47 @@
+name: Agent CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: pytest --cov=. --cov-report=xml
+      - name: Check coverage
+        run: |
+          coverage=$(python -c "import xml.etree.ElementTree as ET; print(float(ET.parse('coverage.xml').find('.').attrib['line-rate']) * 100)")
+          echo "Coverage: ${coverage}%"
+          if (( $(echo "$coverage < 80" | bc -l) )); then exit 1; fi
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t agent:${{ github.sha }} .
+      - name: Push to registry
+        run: |
+          docker tag agent:${{ github.sha }} your-registry/agent:latest
+          docker push your-registry/agent:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to production
+        run: |
+          ssh deploy@server "cd /opt/agent && docker-compose pull && docker-compose up -d"
