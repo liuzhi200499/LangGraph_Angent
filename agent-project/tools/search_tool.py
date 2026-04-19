@@ -1,6 +1,6 @@
 """
 知识库语义搜索工具
-Agent 可调用的工具之一，通过 MenteeDB 向量数据库进行语义搜索。
+Agent 可调用的工具之一，通过 ChromaDB 向量数据库进行语义搜索。
 使用 Pydantic Schema 定义参数结构，供 LLM 理解工具的使用方式。
 """
 import json

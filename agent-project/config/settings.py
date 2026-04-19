@@ -18,9 +18,6 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = 0.7           # 生成温度，0=确定性，1=随机性
     LLM_MAX_TOKENS: int = 2000             # 单次生成的最大 Token 数
 
-    # === 嵌入模型配置 ===
-    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"  # Sentence-Transformers 嵌入模型名称
-
     # === 向量搜索配置 ===
     VECTOR_SEARCH_LIMIT: int = 5           # 语义搜索返回的最大结果数
 
@@ -34,7 +31,7 @@ class Settings(BaseSettings):
 
     # === 数据库路径配置 ===
     SQLITE_DB_PATH: str = "./data/agent.db"      # SQLite 数据库文件路径
-    VECTOR_DB_PATH: str = "./data/agent_memory"  # MenteeDB 向量数据库持久化目录
+    VECTOR_DB_PATH: str = "./data/agent_memory"  # ChromaDB 向量数据库持久化目录
 
     class Config:
         env_file = ".env"  # 从项目根目录的 .env 文件加载配置

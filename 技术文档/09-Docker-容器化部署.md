@@ -86,9 +86,9 @@ ENV PORT=8000
 # 暴露端口
 EXPOSE 8000
 
-# 健康检查
+# 健康检查（使用 Python 替代 curl，因为 slim 镜像不含 curl）
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/health || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')" || exit 1
 
 # 启动命令
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
@@ -192,7 +192,7 @@ docker rmi agent-app:latest
 ### 5.1 docker-compose.yml
 
 ```yaml
-version: "3.8"
+# 注意：Docker Compose V2 已弃用 version 字段，直接省略即可
 
 services:
   # Agent 应用服务
@@ -208,7 +208,7 @@ services:
       - .env
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -8,10 +8,10 @@ Streamlit 是一个 Python 前端框架，用纯 Python 代码快速构建数据
 
 | 项目 | 说明 |
 |------|------|
-| 版本 | 1.38.0 |
+| 版本 | 1.54.0 |
 | 语言 | Python |
 | 官方文档 | https://docs.streamlit.io/ |
-| 安装 | `pip install streamlit==1.38.0` |
+| 安装 | `pip install streamlit` |
 | 核心价值 | 纯 Python 构建交互式 Web 界面 |
 
 ---
@@ -21,7 +21,8 @@ Streamlit 是一个 Python 前端框架，用纯 Python 代码快速构建数据
 ### 2.1 安装
 
 ```bash
-pip install streamlit==1.38.0
+pip install streamlit
+# 当前最新版本：1.54.0（2026-02-04）
 ```
 
 ### 2.2 创建并运行应用

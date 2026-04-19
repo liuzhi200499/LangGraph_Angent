@@ -51,7 +51,14 @@ def agent_node(state: dict) -> dict:
 
     def to_openai_msg(m):
         if hasattr(m, "tool_calls") and m.tool_calls:
-            return {"role": "assistant", "content": m.content or "", "tool_calls": m.tool_calls}
+            openai_tcs = []
+            for tc in m.tool_calls:
+                openai_tcs.append({
+                    "type": "function",
+                    "function": {"name": tc["name"], "arguments": json.dumps(tc["args"])},
+                    "id": tc.get("id", ""),
+                })
+            return {"role": "assistant", "content": m.content or "", "tool_calls": openai_tcs}
         if m.type == "tool":
             return {"role": "tool", "content": m.content, "tool_call_id": getattr(m, "tool_call_id", "")}
         return {"role": role_map.get(m.type, m.type), "content": m.content}
@@ -65,6 +72,7 @@ def agent_node(state: dict) -> dict:
         max_tokens=settings.LLM_MAX_TOKENS,
         api_key=settings.LLM_API_KEY,
         api_base=settings.LLM_API_BASE,
+        timeout=120,
     )
 
     # 将 LiteLLM/OpenAI 的响应转换为 LangChain AIMessage

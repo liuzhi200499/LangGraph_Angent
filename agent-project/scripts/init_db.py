@@ -1,6 +1,6 @@
 """
 数据库初始化脚本
-在项目首次运行前执行，创建 SQLite 表结构和 MenteeDB 向量表。
+在项目首次运行前执行，创建 SQLite 表结构和 ChromaDB 向量集合。
 运行命令：python scripts/init_db.py
 """
 from db.sqlite_manager import SQLiteManager
@@ -14,11 +14,11 @@ def main():
     SQLiteManager()
     print("SQLite 数据库初始化完成。")
 
-    # 初始化 MenteeDB 向量数据库（创建 knowledge_chunks 向量表并加载嵌入模型）
-    print("正在初始化 MenteeDB 向量数据库...")
+    # 初始化 ChromaDB 向量数据库（创建 knowledge_chunks 集合并加载嵌入模型）
+    print("正在初始化 ChromaDB 向量数据库...")
     vm = VectorManager()
     vm.init_table("knowledge_chunks")
-    print("MenteeDB 向量数据库初始化完成。")
+    print("ChromaDB 向量数据库初始化完成。")
 
     print("所有数据库初始化完成！")
 

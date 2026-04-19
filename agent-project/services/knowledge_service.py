@@ -1,7 +1,7 @@
 """
 知识库服务模块
 提供知识文档的导入、搜索、删除等功能。
-处理流程：文档 → 智能文本分块 → 向量化 → MenteeDB 存储。
+处理流程：文档 → 智能文本分块 → 向量化 → ChromaDB 存储。
 """
 import uuid
 import json
@@ -45,7 +45,7 @@ def chunk_text(text: str, chunk_size: int = None, overlap: int = None) -> list[s
 def import_knowledge(title: str, content: str, source: str = "manual") -> tuple[str, int]:
     """
     导入知识文档
-    完整流程：文本分块 → 写入 SQLite 元数据 → 批量写入 MenteeDB 向量库
+    完整流程：文本分块 → 写入 SQLite 元数据 → 批量写入 ChromaDB 向量库
 
     参数:
         title: 文档标题
@@ -61,7 +61,7 @@ def import_knowledge(title: str, content: str, source: str = "manual") -> tuple[
     # 第二步：在 SQLite 中保存文档元数据
     sqlite_manager.save_document_meta(doc_id, title, source, len(chunks))
 
-    # 第三步：构建向量记录并批量写入 MenteeDB
+    # 第三步：构建向量记录并批量写入 ChromaDB
     records = [
         {
             "doc_id": doc_id,
@@ -80,7 +80,7 @@ def import_knowledge(title: str, content: str, source: str = "manual") -> tuple[
 def search_knowledge(query: str, top_k: int = None) -> list[dict]:
     """
     在知识库中进行语义搜索
-    将查询文本向量化后，在 MenteeDB 中查找最相似的知识片段。
+    将查询文本向量化后，在 ChromaDB 中查找最相似的知识片段。
     """
     return vector_manager.search(
         table_name="knowledge_chunks",
@@ -100,6 +100,6 @@ def list_documents() -> list[dict]:
 
 
 def delete_knowledge(doc_id: str):
-    """删除知识文档（SQLite 软删除 + MenteeDB 向量记录删除）"""
+    """删除知识文档（SQLite 软删除 + ChromaDB 向量记录删除）"""
     sqlite_manager.delete_document(doc_id)
     vector_manager.delete_by_doc_id("knowledge_chunks", doc_id)

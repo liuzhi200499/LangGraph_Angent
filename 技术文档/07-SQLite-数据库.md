@@ -51,6 +51,7 @@ conn.close()
 
 ```python
 import sqlite3
+from contextlib import closing
 
 def get_connection():
     """获取数据库连接"""
@@ -58,11 +59,13 @@ def get_connection():
     conn.row_factory = sqlite3.Row  # 返回字典风格结果
     return conn
 
-# with 语句自动提交/回滚
-with get_connection() as conn:
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM conversations")
-    rows = cursor.fetchall()
+# 注意：sqlite3 的 with 只管理事务（提交/回滚），不关闭连接
+# 需配合 closing() 确保连接被正确关闭
+with closing(get_connection()) as conn:
+    with conn:  # 管理事务
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM conversations")
+        rows = cursor.fetchall()
 ```
 
 ---

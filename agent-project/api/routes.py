@@ -108,7 +108,7 @@ async def get_conversation(thread_id: str):
 async def import_text(req: KnowledgeImportRequest):
     """
     导入文本知识到知识库
-    处理流程：文本分块 → 向量化 → 存入 MenteeDB
+    处理流程：文本分块 → 向量化 → 存入 ChromaDB
     """
     from services.knowledge_service import import_knowledge
     doc_id, chunk_count = import_knowledge(req.title, req.content, req.source)

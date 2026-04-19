@@ -96,17 +96,17 @@ jobs:
     steps:
       # 步骤 1：检出代码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # 步骤 2：设置 Python 环境
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.10"
 
       # 步骤 3：缓存依赖
       - name: Cache pip packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
@@ -146,16 +146,16 @@ jobs:
     if: github.ref == 'refs/heads/main'  # 仅 main 分支触发
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -263,11 +263,11 @@ on:
 
 | Action | 用途 | 示例 |
 |--------|------|------|
-| `actions/checkout@v4` | 检出代码 | 每个工作流第一步 |
-| `actions/setup-python@v5` | 配置 Python | `python-version: "3.10"` |
-| `actions/cache@v4` | 缓存依赖 | 缓存 pip 包 |
-| `docker/login-action@v3` | Docker 登录 | 推送镜像前登录 |
-| `docker/build-push-action@v5` | 构建推送镜像 | 一键构建并推送 |
+| `actions/checkout@v5` | 检出代码 | 每个工作流第一步 |
+| `actions/setup-python@v6` | 配置 Python | `python-version: "3.10"` |
+| `actions/cache@v5` | 缓存依赖 | 缓存 pip 包 |
+| `docker/login-action@v4` | Docker 登录 | 推送镜像前登录 |
+| `docker/build-push-action@v7` | 构建推送镜像 | 一键构建并推送 |
 | `appleboy/ssh-action@v1` | SSH 远程执行 | 远程部署命令 |
 
 ---

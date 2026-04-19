@@ -1,69 +1,76 @@
 """
-MenteeDB 向量数据库管理模块
+Chroma 向量数据库管理模块
 负责知识库的向量存储和语义搜索功能。
-采用延迟初始化策略，首次使用时才加载嵌入模型和数据库连接。
+采用延迟初始化策略，首次使用时才加载数据库连接和嵌入模型。
 """
 import os
-import json
-from typing import Optional
 from config.settings import settings
 
 
 class VectorManager:
     """
     向量数据库管理器
-    - 封装 MenteeDB 的初始化、数据写入和语义搜索操作
+    - 封装 Chroma 的初始化、数据写入和语义搜索操作
     - 延迟加载数据库实例，避免模块导入时的性能开销
     """
 
-    def __init__(self, persist_directory: str = None, embedding_model: str = None):
+    def __init__(self, persist_directory: str = None):
         self.persist_directory = persist_directory or settings.VECTOR_DB_PATH
-        self.embedding_model = embedding_model or settings.EMBEDDING_MODEL
-        self._db = None  # 延迟初始化，首次调用 _get_db() 时才创建实例
+        self._client = None
+        self._collections = {}
 
-    def _get_db(self):
-        """延迟初始化并返回 MenteeDB 实例，自动创建持久化目录"""
-        if self._db is None:
-            from menteedb import MenteeDB
+    def _get_client(self):
+        if self._client is None:
+            import chromadb
+            from chromadb.utils import embedding_functions
             os.makedirs(self.persist_directory, exist_ok=True)
-            self._db = MenteeDB(
-                base_path=self.persist_directory,
+            self._embedding_fn = embedding_functions.HuggingFaceEmbeddingFunction(
+                model_name="BAAI/bge-small-zh-v1.5",
             )
-        return self._db
+            self._client = chromadb.PersistentClient(path=self.persist_directory)
+        return self._client
+
+    def _get_collection(self, table_name: str):
+        if table_name not in self._collections:
+            client = self._get_client()
+            self._collections[table_name] = client.get_or_create_collection(
+                name=table_name,
+                embedding_function=self._embedding_fn,
+            )
+        return self._collections[table_name]
 
     def init_table(self, table_name: str = "knowledge_chunks"):
-        """创建向量表，定义文档、分块、标题、内容和元数据字段"""
-        db = self._get_db()
-        db.create_table(
-            table_name=table_name,
-            fields=["doc_id", "chunk_id", "title", "content", "metadata"],
-            # content 字段会自动进行向量化和索引
-        )
+        self._get_collection(table_name)
 
     def insert_records(self, table_name: str, records: list[dict]):
-        """批量插入向量化记录到指定表中"""
-        db = self._get_db()
-        db.batch_insert(table_name, records)
+        collection = self._get_collection(table_name)
+        ids = [r["chunk_id"] for r in records]
+        documents = [r["content"] for r in records]
+        metadatas = [
+            {"doc_id": r["doc_id"], "title": r["title"], "metadata": r.get("metadata", "")}
+            for r in records
+        ]
+        collection.add(ids=ids, documents=documents, metadatas=metadatas)
 
     def search(self, table_name: str, query_text: str, limit: int = None) -> list[dict]:
-        """
-        语义搜索：将查询文本向量化后，在向量库中查找最相似的记录
-        - query_text: 用户的自然语言查询
-        - limit: 返回结果数量上限
-        """
         limit = limit or settings.VECTOR_SEARCH_LIMIT
-        db = self._get_db()
-        return db.search(
-            table_name=table_name,
-            query_text=query_text,
-            limit=limit,
-        )
+        collection = self._get_collection(table_name)
+        results = collection.query(query_texts=[query_text], n_results=limit)
+
+        records = []
+        if results and results["documents"]:
+            for i, doc in enumerate(results["documents"][0]):
+                meta = results["metadatas"][0][i] if results["metadatas"] else {}
+                records.append({
+                    "title": meta.get("title", ""),
+                    "content": doc,
+                    "doc_id": meta.get("doc_id", ""),
+                })
+        return records
 
     def delete_by_doc_id(self, table_name: str, doc_id: str):
-        """根据文档 ID 删除该文档关联的所有向量记录"""
-        db = self._get_db()
-        db.delete(table_name, filters={"doc_id": doc_id})
+        collection = self._get_collection(table_name)
+        collection.delete(where={"doc_id": doc_id})
 
 
-# 全局单例，供其他模块直接导入使用
 vector_manager = VectorManager()
