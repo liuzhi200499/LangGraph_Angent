@@ -1,0 +1,28 @@
+# === AI 框架 ===
+langgraph>=0.2.27,<0.3
+langchain>=0.2.0
+langchain-core>=0.2.27,<0.3
+
+# === 向量数据库 ===
+menteedb>=0.2.0
+
+# === LLM 接口 ===
+litellm>=1.50.0
+openai>=1.50.0
+
+# === 本地嵌入模型 ===
+
+# === Web 框架 ===
+fastapi>=0.115.0
+uvicorn>=0.30.0
+sse-starlette>=2.1.0
+
+# === 前端 Demo ===
+streamlit>=1.38.0
+
+# === 工具库 ===
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+python-dotenv>=1.0.0
+tiktoken>=0.7.0
+httpx>=0.27.0
