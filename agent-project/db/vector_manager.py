@@ -27,8 +27,7 @@ class VectorManager:
             from menteedb import MenteeDB
             os.makedirs(self.persist_directory, exist_ok=True)
             self._db = MenteeDB(
-                persist_directory=self.persist_directory,
-                embedding_model=self.embedding_model,  # 加载 Sentence-Transformers 嵌入模型
+                base_path=self.persist_directory,
             )
         return self._db
 
