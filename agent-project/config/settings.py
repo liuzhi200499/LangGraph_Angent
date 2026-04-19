@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = 0.7           # 生成温度，0=确定性，1=随机性
     LLM_MAX_TOKENS: int = 2000             # 单次生成的最大 Token 数
 
+    # === 嵌入模型配置 ===
+    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"  # 嵌入模型名称
+
     # === 向量搜索配置 ===
     VECTOR_SEARCH_LIMIT: int = 5           # 语义搜索返回的最大结果数
 
