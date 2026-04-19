@@ -25,10 +25,11 @@ ChromaDB（简称 Chroma）是一个开源的轻量级向量数据库，专为 A
 | 内置嵌入 | 有 | 无 | 无 | 无 |
 | 语义搜索 | 原生支持 | 原生支持 | 原生支持 | 需手动实现 |
 | CRUD | 完整（增删查） | 完整 | 完整 | 仅查询 |
+| 自定义嵌入 | 支持 | 支持 | 支持 | 需手动 |
 | 额外依赖 | 少量 | 账号+网络 | 重量级 | 无 |
 | 适合场景 | 轻量原型/中小项目 | 生产云部署 | 大规模生产 | 高性能研究 |
 
-本项目选择 ChromaDB 的原因：**零配置、纯本地、内置嵌入、支持删除**。
+本项目选择 ChromaDB 的原因：**零配置、纯本地、支持自定义嵌入模型、支持删除**。
 
 ---
 
@@ -98,8 +99,8 @@ collections = client.list_collections()
 
 **关键概念：**
 - **Collection（集合）** = 类似数据库的"表"，存储文档及其向量
-- ChromaDB 会自动对 `documents` 字段进行向量化，无需手动调用嵌入模型
-- 默认使用 `all-MiniLM-L6-v2` 嵌入模型（首次使用自动下载）
+- ChromaDB 支持自定义嵌入函数，本项目使用 `BAAI/bge-small-zh-v1.5` 中文嵌入模型
+- 如果不指定嵌入函数，默认使用 `all-MiniLM-L6-v2`（英文为主，中文效果较差）
 
 ### 4.3 第二步：插入数据
 
@@ -204,22 +205,29 @@ class VectorManager:
     def __init__(self, persist_directory: str = None):
         self.persist_directory = persist_directory or settings.VECTOR_DB_PATH
         self._client = None
+        self._embedding_fn = None
         self._collections = {}
 
     def _get_client(self):
-        """延迟加载 ChromaDB 客户端"""
+        """延迟加载 ChromaDB 客户端和嵌入函数"""
         if self._client is None:
             import chromadb
+            from chromadb.utils import embedding_functions
             os.makedirs(self.persist_directory, exist_ok=True)
+            # 使用中文嵌入模型，比默认英文模型效果更好
+            self._embedding_fn = embedding_functions.HuggingFaceEmbeddingFunction(
+                model_name="BAAI/bge-small-zh-v1.5",
+            )
             self._client = chromadb.PersistentClient(path=self.persist_directory)
         return self._client
 
     def _get_collection(self, table_name: str):
-        """获取或创建集合（带缓存）"""
+        """获取或创建集合（带缓存，绑定嵌入函数）"""
         if table_name not in self._collections:
             client = self._get_client()
             self._collections[table_name] = client.get_or_create_collection(
                 name=table_name,
+                embedding_function=self._embedding_fn,
             )
         return self._collections[table_name]
 
@@ -337,7 +345,7 @@ def smart_chunk(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str
 | 首次运行很慢 | 下载嵌入模型 | 等待下载完成（约 80MB），后续会缓存 |
 | 搜索结果不相关 | 分块过大/过小 | 调整 `chunk_size` 为 500 左右 |
 | 内存占用高 | 数据量过大 | 控制单集合记录数量，定期清理 |
-| 中文搜索效果差 | 默认英文嵌入模型 | 创建集合时指定中文嵌入模型 |
+| 中文搜索效果差 | 默认英文嵌入模型 | 创建集合时指定中文嵌入模型（如 `BAAI/bge-small-zh-v1.5`） |
 | ids 重复报错 | 插入已有 id | 改用 `upsert` 或先 `delete` 再 `add` |
 
 ---
